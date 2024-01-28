@@ -5,7 +5,6 @@ import { verifyJwt } from '../middlewares/auth.middleware.js'
 const router = Router()
 
 router.route('/register').post(registerUser)
-// localhost:5000/api/v1/user/register
 router.route('/login').post(loginUser)
 
 // secured routes

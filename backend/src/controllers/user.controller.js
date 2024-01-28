@@ -188,9 +188,9 @@ const logoutUser = asyncHandler(async (req, res) => {
       }
     )
     // console.log("logoutUser",logoutUser)
-    if( typeof logoutUser?.refreshToken !== undefined ){
-      throw new ApiError(500, "refresh token didn't change to undefined on DB")
-    }
+    // if( typeof logoutUser?.refreshToken !== undefined ){
+    //   throw new ApiError(500, "refresh token didn't change to undefined on DB")
+    // }
 
     const options = {
       httpOnly: true,
@@ -216,7 +216,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   console.log("decodedToken",decodedToken)
 
   const user = await User.findById(decodedToken?._id)
-  if(user?.refreshToken === incomingToken){
+  if(user?.refreshToken !== incomingToken){
     throw new ApiError(401, "Token expired")
   }
 
@@ -235,9 +235,99 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     new ApiResponse(200, "token refreshed successfully", {accessToken, refreshToken})
   )
 })
+
+const updateProfile = asyncHandler(async (req, res) => {
+  // get id from access token's variable
+  const userId = req.user?._id
+  if( !userId ){
+    throw new ApiError(401,"Aren't getting, the id of the user ")
+  }
+  // take fields from user
+  const {email, userName, fullName} = req.body();
+
+  // validate is any required field is empty
+  if(
+  [email, userName, fullName].some(field=> field.trim() ==="")
+  ){
+    throw new ApiError(409, "All required field/(s) should be filed")
+  }
+
+  // check all fields marked unique to be containing unique data
+  const listOfUser = await User.find()
+  if(listOfUser?.length > 1){
+    throw new ApiError(409,"field should contain unique data")
+  }  
+  else if(listOfUser?.length === 1){
+    if(listOfUser?._id!== userId){
+      throw new ApiError(409,"field should contain unique data")
+    }
+  }
+
+  // set new data in DB
+  const newUserData = await User.findOneAndUpdate(
+    userId,
+    {
+      $set:{
+        email,
+        userName,
+        fullName,
+      }
+    },
+    {
+      new:true
+    }
+  ).select("-password -refreshToken")
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(203,"update successful",{user:newUserData})
+  )
+
+})
+
+const changePassword = asyncHandler(async(req,res)=>{
+  // get id from access token's variable
+  const userId = req.user?._id
+  if( !userId ){
+    throw new ApiError(401,"Aren't getting, the id of the user ")
+  }
+    // get fields from user - password, newPassword, conform password(optional)
+    const {password, newPassword} = req.body
+
+    if([password,newPassword].some(field=> field.trim()==="")){
+      throw new ApiError(409,"Fields are empty")
+    }
+    // check password is correct
+    const user = await User.findById(userId)
+  if(password !== user?.password){
+    throw new ApiError(409,"current password is wrong")
+  }
+  // save new password in DB
+  await User.findByIdAndUpdate(
+    userId,
+    {
+      $set:{
+        password:newPassword 
+      }
+    },
+    {
+      new:true
+    }
+  )
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(203,"password updated")
+  )
+})
+
 export { 
   registerUser,
   loginUser,
   logoutUser,
-  refreshAccessToken
+  refreshAccessToken,
+  updateProfile,
+  changePassword,
 };

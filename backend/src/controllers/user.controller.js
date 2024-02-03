@@ -286,7 +286,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 
 })
 
-const changePassword = asyncHandler(async(req,res)=>{
+const changeCurrentPassword = asyncHandler(async(req,res)=>{
   // get id from access token's variable
   const userId = req.user?._id
   if( !userId ){
@@ -300,21 +300,24 @@ const changePassword = asyncHandler(async(req,res)=>{
     }
     // check password is correct
     const user = await User.findById(userId)
-  if(password !== user?.password){
+    const isPasswordCorrect = await user.isPasswordCorrect(password)
+  if(isPasswordCorrect){
     throw new ApiError(409,"current password is wrong")
   }
   // save new password in DB
-  await User.findByIdAndUpdate(
-    userId,
-    {
-      $set:{
-        password:newPassword 
-      }
-    },
-    {
-      new:true
-    }
-  )
+  // await User.findByIdAndUpdate(
+  //   userId,
+  //   {
+  //     $set:{
+  //       password:newPassword 
+  //     }
+  //   },
+  //   {
+  //     new:true
+  //   }
+  // )
+  user.password = newPassword
+  await user.save({validateBeforeSave:false})
 
   return res
   .status(200)
@@ -329,5 +332,5 @@ export {
   logoutUser,
   refreshAccessToken,
   updateProfile,
-  changePassword,
+  changeCurrentPassword,
 };

@@ -236,14 +236,14 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   )
 })
 
-const updateProfile = asyncHandler(async (req, res) => {
+const updateAccountDetail = asyncHandler(async (req, res) => {
   // get id from access token's variable
   const userId = req.user?._id
   if( !userId ){
     throw new ApiError(401,"Aren't getting, the id of the user ")
   }
   // take fields from user
-  const {email, userName, fullName} = req.body();
+  const {email, userName, fullName} = req.body
 
   // validate is any required field is empty
   if(
@@ -253,18 +253,18 @@ const updateProfile = asyncHandler(async (req, res) => {
   }
 
   // check all fields marked unique to be containing unique data
-  const listOfUser = await User.find()
-  if(listOfUser?.length > 1){
-    throw new ApiError(409,"field should contain unique data")
-  }  
-  else if(listOfUser?.length === 1){
-    if(listOfUser?._id!== userId){
-      throw new ApiError(409,"field should contain unique data")
-    }
-  }
+  // const listOfUser = await User.find()
+  // if(listOfUser?.length > 1){
+  //   throw new ApiError(409,"field should contain unique data")
+  // }  
+  // else if(listOfUser?.length === 1){
+  //   if(listOfUser?._id!== userId){
+  //     throw new ApiError(409,"field should contain unique data")
+  //   }
+  // }
 
   // set new data in DB
-  const newUserData = await User.findOneAndUpdate(
+  const newUserData = await User.findByIdAndUpdate(
     userId,
     {
       $set:{
@@ -281,7 +281,7 @@ const updateProfile = asyncHandler(async (req, res) => {
   return res
   .status(200)
   .json(
-    new ApiResponse(203,"update successful",{user:newUserData})
+    new ApiResponse(203,"Account details updated successful",{user:newUserData})
   )
 
 })
@@ -305,17 +305,6 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
     throw new ApiError(409,"current password is wrong")
   }
   // save new password in DB
-  // await User.findByIdAndUpdate(
-  //   userId,
-  //   {
-  //     $set:{
-  //       password:newPassword 
-  //     }
-  //   },
-  //   {
-  //     new:true
-  //   }
-  // )
   user.password = newPassword
   await user.save({validateBeforeSave:false})
 
@@ -326,11 +315,97 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
   )
 })
 
+const getCurrentUser = asyncHandler(async(req,res)=>{
+  if( !req?.user ){
+    throw new ApiError(401,"Failed to fetch current user")
+  }
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200,"current user fetched successfully",{user:req.user})
+  )
+})
+
+const updateUserAvatar = asyncHandler(async(req,res)=>{
+  if( !req?.user ){
+    throw new ApiError(409,"User is not logged in")
+  }
+  //take avatar from req.file
+  const localAvatarPath = req?.file?.path
+  if( !localAvatarPath ){
+    throw new ApiError(409,"Avatar not found")
+  }
+
+  // upload avatar to cloudinary
+  const avatar = await uploadOnCloudinary(localAvatarPath)
+
+  if( !avatar.url ){
+    throw new ApiError(500,"Problem on uploading avatar")
+  }
+  // save avatar url in DB
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{
+        avatar:avatar.url
+      }
+    },
+    {new:true}
+  ).select("-password -refreshToken")
+  // remove previous avatar from cloudinary
+
+  // return 
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(203,"Avatar updated successfully",user)
+  )
+})
+
+const updateUserCoverImage = asyncHandler(async(req,res)=>{
+  if( !req?.user ){
+    throw new ApiError(409,"User is not logged in")
+  }
+  //take avatar from req.file
+  const localCoverImagePath = req?.file?.path
+  if( !localCoverImagePath ){
+    throw new ApiError(409,"Cover image not found")
+  }
+
+  // upload avatar to cloudinary
+  const coverImage = await uploadOnCloudinary(localCoverImagePath)
+
+  if( !coverImage.url ){
+    throw new ApiError(500,"Problem on uploading cover image")
+  }
+  // save avatar url in DB
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{
+        avatar:coverImage.url
+      }
+    },
+    {new:true}
+  ).select("-password -refreshToken")
+  // remove previous avatar from cloudinary
+
+  // return 
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(203,"Avatar updated successfully",user)
+  )
+})
+
 export { 
   registerUser,
   loginUser,
   logoutUser,
   refreshAccessToken,
-  updateProfile,
+  updateAccountDetail,
   changeCurrentPassword,
+  getCurrentUser,
+  updateUserCoverImage,
+  updateUserAvatar
 };

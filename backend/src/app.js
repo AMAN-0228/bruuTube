@@ -25,13 +25,16 @@ import userRouter from "./routes/users.router.js";
 
 app.use(
   "/api/v1/user",
-  upload.fields([
-    { name: "avatar", maxCount: 1 },
-    {
-      name: "coverImage",
-      maxCount: 1,
-    }
-  ]),
+  // upload.fields([
+  //   {
+  //     name: "avatar",
+  //     maxCount: 1,
+  //   },
+  //   {
+  //     name: "coverImage",
+  //     maxCount: 1,
+  //   },
+  // ]),
   userRouter
 );
 

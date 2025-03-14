@@ -6,6 +6,8 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { json } from "express";
 import mongoose from "mongoose";
+
+const userService = {};
 const generateAccessAndRefreshTokens = async (userID) => {
   try {
     const user = await User.findById(userID);
@@ -27,7 +29,7 @@ const generateAccessAndRefreshTokens = async (userID) => {
   }
 };
 
-const registerUser = asyncHandler(async (req, res) => {
+userService.registerUser = asyncHandler(async (req, res) => {
   // take user inputs
   // validate input fields
   // check avatar file is present or not
@@ -110,7 +112,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //   work to be done is to delete avatar and coverImage from cloudinary on error
 });
 
-const loginUser = asyncHandler(async (req, res) => {
+userService.loginUser = asyncHandler(async (req, res) => {
   // take user inputs
   const { userName, email, password } = req.body;
   // validate input fields
@@ -171,11 +173,13 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
-const logoutUser = asyncHandler(async (req, res) => {
+userService.logoutUser = asyncHandler(async (req, res) => {
   // user find in db
   // user refresh token update
   // clear cookies
   // console.log(req.user)
+  console.log('logout user');
+  
   const logoutUser = await User.findOneAndUpdate(
     req.user._id,
     {
@@ -241,7 +245,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     );
 });
 
-const updateAccountDetail = asyncHandler(async (req, res) => {
+userService.updateAccountDetail = asyncHandler(async (req, res) => {
   // get id from access token's variable
   const userId = req.user?._id;
   if (!userId) {
@@ -288,7 +292,7 @@ const updateAccountDetail = asyncHandler(async (req, res) => {
   );
 });
 
-const changeCurrentPassword = asyncHandler(async (req, res) => {
+userService.changeCurrentPassword = asyncHandler(async (req, res) => {
   // get id from access token's variable
   const userId = req.user?._id;
   if (!userId) {
@@ -313,18 +317,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(203, "password updated"));
 });
 
-const getCurrentUser = asyncHandler(async (req, res) => {
-  if (!req?.user) {
-    throw new ApiError(401, "Failed to fetch current user");
-  }
-  return res.status(200).json(
-    new ApiResponse(200, "current user fetched successfully", {
-      user: req.user,
-    })
-  );
-});
-
-const updateUserAvatar = asyncHandler(async (req, res) => {
+userService.updateUserAvatar = asyncHandler(async (req, res) => {
   if (!req?.user) {
     throw new ApiError(409, "User is not logged in");
   }
@@ -358,7 +351,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(203, "Avatar updated successfully", user));
 });
 
-const updateUserCoverImage = asyncHandler(async (req, res) => {
+userService.updateUserCoverImage = asyncHandler(async (req, res) => {
   if (!req?.user) {
     throw new ApiError(409, "User is not logged in");
   }
@@ -392,7 +385,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(203, "Avatar updated successfully", user));
 });
 
-const getUserChannelProfile = asyncHandler(async (req, res) => {
+userService.getUserChannelProfile = asyncHandler(async (req, res) => {
   const { userName } = req?.params;
 
   if (!userName?.trim()) {
@@ -463,7 +456,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
-const getWatchHistory = asyncHandler(async (req, res) => {
+userService.getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
       $match:{
@@ -514,16 +507,4 @@ const getWatchHistory = asyncHandler(async (req, res) => {
   )
 });
 
-export {
-  registerUser,
-  loginUser,
-  logoutUser,
-  refreshAccessToken,
-  updateAccountDetail,
-  changeCurrentPassword,
-  getCurrentUser,
-  updateUserCoverImage,
-  updateUserAvatar,
-  getUserChannelProfile,
-  getWatchHistory
-};
+export default userService;

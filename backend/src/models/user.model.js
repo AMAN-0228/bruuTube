@@ -12,6 +12,13 @@ const userSchema = new Schema(
       trim: true,
       index: true,
     },
+    searchString: {
+      type: String,
+      required: true,
+      lowercase: true,
+      unique: true,
+      trim: true,
+    },
     email: {
       type: String,
       required: true,
@@ -46,6 +53,14 @@ const userSchema = new Schema(
         ref: "Video",
       },
     ],
+    isDummyUser: {
+      type: Boolean,
+      default: true,
+    },
+    active: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

@@ -1,7 +1,7 @@
-import asyncHandler from "../utils/asyncHandler";
-import { uploadOnCloudinary } from "../utils/cloudinary";
+import asyncHandler from "../utils/asyncHandler.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import {Video} from '../models/video.model.js'
-import ApiResponse from "../utils/ApiResponse";
+import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 
 const publishVideo = asyncHandler( async (req, res) => {        //to upload/add video on site/software
@@ -158,6 +158,7 @@ const getVideoById = asyncHandler(async(req, res) => {
 })
 
 const getAllVideos = asyncHandler(async(req, res) => {       //to get all videos as per query
+    console.log('_________ get All videos __________');
     
 })
 
